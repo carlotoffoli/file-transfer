@@ -5,9 +5,12 @@ from time import sleep, time
 scanning = True
 broadcasting = True
 
+THIS = bytes(gethostname(), 'utf-8')
+
 PORT = 5005
 BEACON = 2
 TIMEOUT = 5
+AUTOACCEPT = False
 
 devices = {}
 
@@ -30,7 +33,7 @@ def broadcast():
     s.bind(('192.168.178.27', PORT))
 
     while broadcasting:
-        s.sendto(bytes(gethostname(), 'utf-8'), ('255.255.255.255', PORT))
+        s.sendto(THIS, ('255.255.255.255', PORT))
         sleep(BEACON)
     
     s.close()
@@ -54,7 +57,7 @@ def scan():
                 'port': endpoint[1],
                 'last_beacon': time()
             }
-        except error as e:
+        except error:
             sleep(0.1)
             
     s.close()
@@ -68,13 +71,14 @@ def scanManager():
                 devices.pop(ip)
         sleep(TIMEOUT)
 
-scanThread = Thread(target=scan)
-scanThread.start()
+if __name__ == '__main__':
+    scanThread = Thread(target=scan)
+    scanThread.start()
 
-for _ in range(10):
-    print(devices)
-    sleep(BEACON)
+    for _ in range(10):
+        print(devices)
+        sleep(BEACON)
 
-print("Scan terminated... stopping")
+    print("Scan terminated... stopping")
 
-scanning = False
+    scanning = False
