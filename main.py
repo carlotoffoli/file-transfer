@@ -43,7 +43,7 @@ def scan():
 
     scanning = True
 
-    Thread(target=scanManager).start()
+    Thread(target=scanManager, daemon=True).start()
 
     s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
     s.setblocking(False)
