@@ -9,9 +9,11 @@ class Controller():
     TCP data transmission with UDP device advertising
     """
 
-    link = socket()
-    PORT = 5555
-    MSG = gethostname()
+    broadcaster = socket()
+    broadcaster = socket()
+    PORT_SERVER = 5000
+    PORT_BROADCAST = 5555
+    MSG = bytes(gethostname()+str(PORT_SERVER), 'utf-8')
     MAX_CONNECTIONS = 5
     BEACON = 1
     
@@ -29,26 +31,29 @@ class Controller():
         """
 
         # Close any open socket
-        self.link.close()
+        self.broadcaster.close()
 
         # Setup UDP broadcasting
-        self.link = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-        self.link.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+        self.broadcaster = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+        self.broadcaster.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
 
         # IP address binding
-        self.link.bind((LOCALIP, self.PORT))
+        self.broadcaster.bind((LOCALIP, self.PORT))
 
         # Advertising
-        self.link.sendto(self.MSG, ('255.255.255.255', self.PORT))
+        self.broadcaster.sendto(self.MSG, ('255.255.255.255', self.PORT))
         sleep(self.BEACON)
 
     def Connect(self, endpoint_ip, endpoint_port):
         """
         Used to setup the TCP connection before sending infos
         """
+        
+        # Close any open socket on that port
+        self.server.close()
 
         # TCP socket initialization
-        self.link = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
+        self.server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
 
         # Endpoint connection
-        self.link.connect((endpoint_ip, endpoint_port))
+        self.server.connect((endpoint_ip, endpoint_port))
