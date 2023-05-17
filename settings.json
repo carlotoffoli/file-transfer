@@ -3,6 +3,5 @@
     "beacon": 2,
     "port": 5005,
     "bufsize": 1024,
-    "timeout": 5,
-    "autoaccept": false
+    "timeout": 5
 }
