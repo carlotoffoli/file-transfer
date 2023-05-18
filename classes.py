@@ -5,12 +5,6 @@ from json import loads, dumps
 from json.decoder import JSONDecodeError
 from os import stat
 
-"""
-to get file size:
-
-size = stat(filename).st_size
-"""
-
 def getlocalips() -> tuple:
     # Returns IP list for each machine's NIC
     return tuple(gethostbyname_ex(gethostname())[2])
@@ -146,10 +140,21 @@ class Controller():
 
         if is_file: output.close()
 
-    def send(self, data, type = 'file'):
+        # Close socket at the end
+        self.server.close()
+
+    def send(self, data, content = 'string'):
         """
         Sends data to the receiving socket
+        data: text | filepath
+        type: file | string
         """
+
+        # Param check
+        if not (content in ('file', 'string')):
+            raise ValueError("type argument must be 'file' or 'string'")
+
+        is_file = (content == 'file')
 
         # Setup TCP socket
         self._tcp_setup()
@@ -158,9 +163,41 @@ class Controller():
         # the receiver before doing so
         self.server.connect(self.selected_receiver)
 
-        # Send headers -- INCOMPLETE
-        self.server.sendall()
+        # Headers setup
+        headers = {}
 
+        if is_file:
+            headers["size"] = stat(data).st_size
+            headers["filename"] = data
+        else:
+            headers["size"] = len(data)
+            headers["filename"] = ''
+
+        # Open file
+        if is_file:
+            file = open(data, 'rb')
+
+        # Send headers -- INCOMPLETE
+        self.server.sendall(headers)
+
+        # End of headers
+        self.server.send(bytes(1))
+
+        # Send data
+        data_left = headers['size']
+
+        while data_left > 0:
+            if is_file:
+                self.server.send(file.read(self.bufsize))
+            else:
+                # Send all data in one time
+                self.server.sendall(data)
+                break
+
+        if is_file: file.close()
+        
+        # Close socket after all
+        self.server.close()
 
     def scan(self):
         """
